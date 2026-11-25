@@ -1,0 +1,33 @@
+services:
+  backend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npx prisma generate && npx prisma db push && npm run build && node dist/server.js"
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_COOKIE_NAME=${SESSION_COOKIE_NAME}
+      - SESSION_TTL_SECONDS=${SESSION_TTL_SECONDS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - SLACK_REDIRECT_URI=${SLACK_REDIRECT_URI}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - PORT=4000
+      - NODE_ENV=production
+      - WORKER_CONCURRENCY=${WORKER_CONCURRENCY:-5}
+      - MIN_DELAY_MS=${MIN_DELAY_MS:-2000}
+      - MAX_EMAILS_PER_HOUR=${MAX_EMAILS_PER_HOUR:-100}
+      - EMAIL_QUEUE_NAME=${EMAIL_QUEUE_NAME:-email-dispatch-queue}
+      - RUN_EMBEDDED_WORKER=true
+    volumes:
+      - ./backend:/app/backend
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json

@@ -1,0 +1,44 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+.next/
+build/
+out/
+
+# Environment files - NEVER commit secrets
+.env
+.env.local
+.env.production
+.env*.local
+backend/.env
+frontend/.env.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+
+# Misc
+.cache/
+*.tsbuildinfo
+
+# Salesforce (not part of this project)
+.sf/
+.sfdx/
+force-app/

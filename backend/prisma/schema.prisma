@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmailJobStatus {
+  scheduled
+  processing
+  sent
+  failed
+  rate_limited
+}
+
+model User {
+  id               String            @id @default(uuid())
+  googleId         String            @unique @map("google_id")
+  email            String            @unique
+  name             String
+  avatarUrl        String?           @map("avatar_url")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  senders          Sender[]
+  emailJobs        EmailJob[]
+  slackIntegration SlackIntegration?
+
+  @@map("users")
+}
+
+model Sender {
+  id         String     @id @default(uuid())
+  userId     String     @map("user_id")
+  email      String
+  name       String
+  smtpHost   String     @map("smtp_host")
+  smtpPort   Int        @map("smtp_port")
+  smtpSecure Boolean    @default(false) @map("smtp_secure")
+  smtpUser   String     @map("smtp_user")
+  smtpPass   String     @map("smtp_pass")
+  isEthereal Boolean    @default(true) @map("is_ethereal")
+  isDefault  Boolean    @default(false) @map("is_default")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailJobs  EmailJob[]
+
+  @@unique([userId, email])
+  @@index([userId, isDefault])
+  @@map("senders")
+}
+
+model EmailJob {
+  id             String         @id @default(uuid())
+  userId         String         @map("user_id")
+  senderId       String         @map("sender_id")
+  idempotencyKey String         @unique @map("idempotency_key")
+  recipient      String
+  subject        String
+  body           String         @db.Text
+  scheduledAt    DateTime       @map("scheduled_at")
+  sentAt         DateTime?      @map("sent_at")
+  status         EmailJobStatus @default(scheduled)
+  delayBetweenMs Int?           @map("delay_between_ms")
+  hourlyLimit    Int?           @map("hourly_limit")
+  attempts       Int            @default(0)
+  bullJobId      String?        @map("bull_job_id")
+  messageId      String?        @map("message_id")
+  previewUrl     String?        @map("preview_url")
+  error          String?        @db.Text
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender         Sender         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, scheduledAt])
+  @@index([userId, status, sentAt])
+  @@index([senderId, status])
+  @@index([status, scheduledAt])
+  @@map("email_jobs")
+}
+
+model SlackIntegration {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  teamId      String?  @map("team_id")
+  teamName    String?  @map("team_name")
+  botUserId   String?  @map("bot_user_id")
+  accessToken String?  @map("access_token")
+  webhookUrl  String?  @map("webhook_url")
+  channelId   String?  @map("channel_id")
+  channelName String?  @map("channel_name")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("slack_integrations")
+}
